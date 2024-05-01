@@ -1,16 +1,16 @@
 pub use axum::{extract::DefaultBodyLimit, extract::Extension, routing::*, Router};
 // pub use axum::debug_handler;
 pub use axum::response::*;
-pub use std::sync::{Arc, Mutex};
+pub use std::sync::Arc;
 pub use tower_http::classify::*;
 pub use tower_http::cors::{Any, CorsLayer};
 // pub use tower_http::limit::*;
+pub use axum::Json;
+pub use serde::Serialize;
 pub use tower_http::trace::TraceLayer;
 pub use tower_http::trace::*;
 pub use tracing::*;
-pub use axum::Json;
 pub use utoipa::ToSchema;
-pub use serde::Serialize;
 
 #[derive(Serialize, ToSchema)]
 pub struct HttpErrMessage {
@@ -42,7 +42,6 @@ pub fn axum_trace_full() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>>
                 .include_headers(true),
         )
 }
-
 
 pub async fn axum_serve(listen: &str, app: axum::Router) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(listen).await.unwrap();

@@ -1,38 +1,4 @@
 use clap::{Parser, Subcommand};
-/*
-pub struct SshRealm {
-    /// remote SSH host
-    #[clap(long, default_value = "", env = "REMOTE_SSH_HOST")]
-    pub remote_host: String,
-    /// remote SSH user
-    #[clap(long, default_value = "root", env = "REMOTE_SSH_USER")]
-    pub remote_user: String,
-    /// remote SSH port
-    #[clap(long, default_value = "22", env = "REMOTE_SSH_PORT")]
-    pub remote_port: u16,
-    /// remote SSH password, if not provided, will use key file
-    #[clap(long, default_value = "", env = "REMOTE_SSH_PASSWORD")]
-    pub remote_password: String,
-    /// path to id_rsa file
-    #[clap(long, default_value = "~/.ssh/id_rsa", env = "REMOTE_SSH_KEY_FILE")]
-    pub remote_key_file: String,
-}
-
-pub struct S3Realm {
-    /// AWS S3 access key
-    #[clap(long, env = "ARCHIVE_S3_ACCESS_KEY_ID")]
-    pub s3_access_key: String,
-    /// AWS S3 secret key
-    #[clap(long, env = "ARCHIVE_S3_SECRET_ACCESS_KEY")]
-    pub s3_secret_access_key: String,
-    /// AWS S3 bucket name
-    #[clap(long, env = "ARCHIVE_S3_BUCKET")]
-    pub s3_bucket: String,
-    /// AWS S3 region name
-    #[clap(long, env = "ARCHIVE_S3_REGION")]
-    pub s3_region: String,
-}
-*/
 
 /// command to execute
 #[derive(Subcommand, Debug, Clone)]
@@ -48,9 +14,19 @@ pub enum Command {
         #[clap(short, long, env = "CONFIG_FILE")]
         config: String,
     },
+    /// Get statistics on the realm
+    Stat {
+        /// name of the realm. recommended name format are (project)-(typeofdb)-(db)
+        #[clap(short, long, default_value = "")]
+        name: String,
+        /// file name to be sent to archive
+        /// realms configuration TOML file path
+        #[clap(short, long, env = "CONFIG_FILE")]
+        config: String,
+    },
     /// send backup file to remote archive
     Push {
-        /// name of the database. recommended name format are (project)-(typeofdb)-(db)
+        /// name of the realm. recommended name format are (project)-(typeofdb)-(db)
         #[clap(short, long)]
         name: String,
         /// file name to be sent to archive
@@ -65,7 +41,7 @@ pub enum Command {
     },
     /// ensure the backup file is downloaded from remote archive into exchange folder
     Pull {
-        /// name of the database. recommended name format are (project)-(typeofdb)-(db)
+        /// name of the realm. recommended name format are (project)-(typeofdb)-(db)
         #[clap(short, long)]
         name: String,
         /// exchange dir

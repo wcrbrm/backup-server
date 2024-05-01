@@ -4,15 +4,17 @@ pub mod prelude;
 pub use prelude::*;
 
 #[derive(Debug, Clone)]
-struct AppState {
-    config_path: String,
+pub(crate) struct AppState {
+    pub config_path: String,
 }
 
 pub async fn run(listen: &str, config_path: String) -> anyhow::Result<()> {
-    let shared_state = Arc::new(Mutex::new(AppState { config_path }));
+    use utoipa::Path;
+
+    let shared_state = Arc::new(AppState { config_path });
     let app = Router::new()
-        .route("/openapi.json", get(openapi::handle))
-        .route("/stat/backup/metrics", get(metrics::handle))
+        .route(&openapi::__path_handle::path(), get(openapi::handle))
+        .route(&metrics::__path_handle::path(), get(metrics::handle))
         .layer(DefaultBodyLimit::disable())
         .layer(Extension(shared_state))
         .layer(axum_trace_full())
