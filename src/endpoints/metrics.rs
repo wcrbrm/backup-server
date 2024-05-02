@@ -71,7 +71,7 @@ pub async fn to_string(config: &str) -> String {
 ///
 /// Prometheus metrics endpoint (health check)
 #[utoipa::path(
-    get, path = "/stat/backup/metrics", responses(
+    get, path = "/stats/backup/metrics", responses(
         (status = 200, description = "Prometheus metrics endpoint (health check)", content_type = "text/plain", body = String),
     ),
 )]

@@ -12,7 +12,6 @@ use std::path::Path;
 async fn main() -> anyhow::Result<()> {
     color_eyre::install().unwrap();
     logging::start("INFO");
-    dotenv::dotenv().unwrap();
 
     let opt = match args::parse() {
         Ok(x) => x,
