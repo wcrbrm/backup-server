@@ -14,7 +14,7 @@ lazy_static! {
         opts!("backup_realm_files", "Number of files stored in the realm"),
         &["realm"]
     )
-    .expect("Can't create a REALM_SIZE_TOTAL");
+    .expect("Can't create a REALM_NUM_FILES");
     // total size
     pub static ref REALM_SIZE_TOTAL: IntGaugeVec = register_int_gauge_vec!(
         opts!("backup_realm_size_total", "Total estimate of realm size in bytes"),
@@ -45,8 +45,8 @@ pub async fn to_string(config: &str) -> String {
             for (key, realm) in cfg.realms {
                 match realm.stat().await {
                     Ok(stat) => {
-                        REALM_NUM_FILES.with_label_values(&[&key]).set(stat.0);
-                        REALM_SIZE_TOTAL
+                        REALM_SIZE_TOTAL.with_label_values(&[&key]).set(stat.0);
+                        REALM_NUM_FILES
                             .with_label_values(&[&key])
                             .set(stat.1 as i64);
                         REALM_LATEST
@@ -54,12 +54,14 @@ pub async fn to_string(config: &str) -> String {
                             .set(stat.2.timestamp());
                     }
                     Err(err) => {
-                        tracing::warn!("stat error: {}", err.to_string())
+                        tracing::warn!("realm {} stat error: {}", key, err.to_string())
                     }
                 }
             }
         }
-        Err(_) => {}
+        Err(err) => {
+            tracing::warn!("config error: {}", err.to_string())
+        }
     }
 
     let mut buffer = Vec::<u8>::new();

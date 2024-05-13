@@ -26,6 +26,10 @@ async fn main() -> anyhow::Result<()> {
             println!("{}", serde_json::to_string(&openapi()).unwrap());
         }
         Command::Server { listen, config } => {
+            let cfg = RealmsConfig::from_toml(&config).expect("realms config");
+            for realm in cfg.realms.keys() {
+                tracing::info!("found realm {:?}", realm);
+            }
             endpoints::run(&listen, config).await?;
         }
         Command::Stat { name, config } => {
@@ -53,6 +57,7 @@ async fn main() -> anyhow::Result<()> {
         Command::Push {
             file,
             name,
+            clean,
             exchange_dir,
             config,
         } => {
@@ -63,6 +68,11 @@ async fn main() -> anyhow::Result<()> {
             let path = std::path::Path::new(&exchange_dir).join(&file);
             let size = realm.push(&path).await?;
             println!("Uploaded {} bytes", size);
+            if clean {
+                if let Err(err) = std::fs::remove_file(&path) {
+                    println!("Failed to remove {}: {}", path.display(), err);
+                }
+            }
         }
         Command::Pull {
             name,

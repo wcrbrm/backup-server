@@ -32,6 +32,9 @@ pub enum Command {
         /// file name to be sent to archive
         #[clap(short, long)]
         file: String,
+        /// remove the original file if successfully uploaded
+        #[clap(long)]
+        clean: bool,
         /// exchange dir
         #[clap(short, long, env = "EXCHANGE_DIR")]
         exchange_dir: String,

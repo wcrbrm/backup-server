@@ -37,6 +37,16 @@ impl RealmLocation {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct RealmLifetime {
+    /// max age of the files in days
+    #[serde(default)]
+    pub max_age: u64,
+    /// max number of files to keep
+    #[serde(default)]
+    pub max_files: u64,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Realm {
     /// what prefix is appended on the upload
     #[serde(default)]
@@ -46,7 +56,8 @@ pub struct Realm {
     pub contains: String,
     #[serde(flatten)]
     pub location: RealmLocation,
-    // TODO: lifetime
+    #[serde(flatten)]
+    pub lifetime: Option<RealmLifetime>,
 }
 
 impl Realm {
@@ -67,6 +78,33 @@ impl Realm {
                 self.prefix,
                 file_path.file_name().unwrap().to_str().unwrap()
             );
+            if let Some(lifetime) = &self.lifetime {
+                let mut list = bucket.list(&self.prefix).await?;
+                let mut needs_reload = false;
+                if lifetime.max_age > 0 {
+                    let now = chrono::Utc::now();
+                    let cutoff =
+                        now - std::time::Duration::from_secs(lifetime.max_age * 24 * 60 * 60);
+                    for obj in &list {
+                        if obj.last_modified < cutoff {
+                            let _ = bucket.delete_file(&obj.key).await;
+                            needs_reload = true;
+                        }
+                    }
+                    if needs_reload {
+                        list = bucket.list(&self.prefix).await?;
+                    }
+                }
+                if lifetime.max_files > 0 {
+                    if list.len() as u64 >= lifetime.max_files {
+                        let num_to_delete = list.len() - lifetime.max_files as usize;
+                        // delete first files in the list
+                        for obj in list.into_iter().take(num_to_delete) {
+                            let _ = bucket.delete_file(&obj.key).await;
+                        }
+                    }
+                }
+            }
             return bucket.put_file(&remote_path, file_path).await;
         }
 
@@ -148,6 +186,7 @@ access_key = ""
 secret_access_key = ""
 bucket = ""
 endpoint = "https://eu2.contabostorage.com"
+max_files = 7
 
 "#;
 

@@ -143,6 +143,19 @@ impl Bucket {
         Ok(file_size)
     }
 
+    #[instrument(ret, level = "warn")]
+    pub async fn delete_file(&self, filename: &str) -> anyhow::Result<()> {
+        let del_req = rusoto_s3::DeleteObjectRequest {
+            bucket: self.bucket.clone(),
+            key: filename.to_string(),
+            ..Default::default()
+        };
+        self.client
+            .delete_object(del_req)
+            .await
+            .context("failed to delete object")?;
+        Ok(())
+    }
     /// Get remote S3 file as string
     #[instrument(level = "info")]
     pub async fn get_str(&self, filename: &str) -> anyhow::Result<String> {
@@ -215,6 +228,8 @@ impl Bucket {
                 size: o.size.unwrap_or_default(),
             });
         }
+        // sort out by last modified
+        out.sort_by(|a, b| b.last_modified.cmp(&a.last_modified));
         Ok(out)
     }
 }
